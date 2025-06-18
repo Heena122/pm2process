@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: 'PM2 App Name'
+        description: 'PM2 App'
         required: true
         default: 'my-app'
 
