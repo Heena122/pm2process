@@ -1,0 +1,27 @@
+name: Restart PM2 Process
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'PM2 App Name'
+        required: true
+        default: 'my-app'
+
+jobs:
+  restart:
+    name: Restart PM2 App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Restart PM2 App
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+          "pm2 restart ${{ github.event.inputs.app }} && pm2 save"
