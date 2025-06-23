@@ -1,37 +1,83 @@
 name: Restart PM2 Process
-
 on:
   workflow_dispatch:
     inputs:
-      app:
-        description: 'PM2 App'
+      server_name:
+        description: 'Select the server to connect to'
         required: true
-        default: 'my-app'
-
+        type: choice
+        options:
+          - 'Select the server'
+          - "Indeed Training Droplet"
+          - "Richestsoft Droplet"
+      process_name:
+        description: 'Carefully choose PM2 process to restart. Note - Process 2 and 3 are for theseotrends-backend'
+        required: true
+        type: choice
+        options:
+          - 'Select the process'
+          - '2'
+          - '3'
+          - 'JCA_Api_Gateway'
+          - 'JCA_central_service'
+          - 'JCA_driver_service'
+          - 'JCA_notify_service'
+          - 'JCA_ride_service'
+          - 'JCA_socket_service'
+          - 'JCA_user_service'
+          - 'Tourist-guide'
+          - 'bcib-admin'
+          - 'bcib-backend'
+          - 'bcib-frontend'
+          - 'boost-backend-api'
+          - 'boost-frontend'
+          - 'codestoreapi'
+          - 'codestorefrontend'
+          - 'demotaxi'
+          - 'dhobisocket'
+          - 'droob-backend'
+          - 'invisa-socket'
+          - 'jca-socket-server'
+          - 'ukraine-backend'
+          - 'vite-app'
+          - 'wonkaa-socket'
+          - 'seotrendsfrontend'
+          - 'cron-script'
 jobs:
-  restart:
-    name: Restart PM2 App
+  restart-process:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Create SSH Key Files
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/private.pem
-          chmod 600 ~/.ssh/private.pem
-
-      - name: Add server to known_hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-
-      - name: Copy Public Key to Remote Server (only first time)
-        if: false # Disable this once key is copied, or use condition
-        run: |
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/github-actions.pub
-          chmod 644 ~/.ssh/github-actions.pub
-          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh-copy-id -i ~/.ssh/github-actions.pub -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
-
-      - name: Restart PM2 App
-        run: |
-          ssh -i ~/.ssh/private.pem -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-          "pm2 restart ${{ github.event.inputs.app }} && pm2 save"
+    - name: Set server connection based on input
+      id: set-connection
+      run: |
+        if [ "${{ github.event.inputs.server_name }}" = "Indeed Training Droplet" ]; then
+          echo "host=${{ secrets.SSH_HOST }}" >> $GITHUB_OUTPUT
+          echo "user=${{ secrets.SSH_USER }}" >> $GITHUB_OUTPUT
+          echo "key=${{ secrets.SSH_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
+        elif [ "${{ github.event.inputs.server_name }}" = "Richestsoft Droplet" ]; then
+          echo "host=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_OUTPUT
+          echo "user=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_OUTPUT
+          echo "key=${{ secrets.RICHESTSOFT_SSH_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
+        else
+          echo ":x: Unknown server selection: '${{ github.event.inputs.server_name }}'"
+          exit 1
+        fi
+    - name: Execute PM2 Restart via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ steps.set-connection.outputs.host }}
+        username: ${{ steps.set-connection.outputs.user }}
+        key: ${{ steps.set-connection.outputs.key }}
+        script: |
+          if [ "${{ github.event.inputs.process_name }}" = "Select_the_process" ]; then
+            echo ":x: Invalid process name selected. Aborting."
+            exit 1
+          fi
+          echo ":mag: Current PM2 processes:"
+          pm2 list
+          echo ":arrows_counterclockwise: Restarting process: ${{ github.event.inputs.process_name }}"
+          pm2 restart "${{ github.event.inputs.process_name }}"
+          echo ":floppy_disk: Saving PM2 state..."
+          pm2 save
+          echo ":white_check_mark: Updated PM2 process list:"
+          pm2 list
