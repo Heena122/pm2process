@@ -1,4 +1,5 @@
 name: Restart PM2 Process
+
 on:
   workflow_dispatch:
     inputs:
@@ -8,8 +9,8 @@ on:
         type: choice
         options:
           - 'Select the server'
-          - "Indeed Training Droplet"
-          - "Richestsoft Droplet"
+          - 'Indeed Training Droplet'
+          - 'Richestsoft Droplet'
       process_name:
         description: 'Carefully choose PM2 process to restart. Note - Process 2 and 3 are for theseotrends-backend'
         required: true
@@ -43,41 +44,42 @@ on:
           - 'wonkaa-socket'
           - 'seotrendsfrontend'
           - 'cron-script'
+
 jobs:
   restart-process:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Set server connection based on input
-      id: set-connection
-      run: |
-        if [ "${{ github.event.inputs.server_name }}" = "Indeed Training Droplet" ]; then
-          echo "host=${{ secrets.SERVER_IP }}" >> $GITHUB_OUTPUT
-          echo "user=${{ secrets.SERVER_USER }}" >> $GITHUB_OUTPUT
-          echo "key=${{ secrets.SERVER_PASSWORD }}" >> $GITHUB_OUTPUT
-        elif [ "${{ github.event.inputs.server_name }}" = "Richestsoft Droplet" ]; then
-          echo "host=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_OUTPUT
-          echo "user=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_OUTPUT
-          echo "key=${{ secrets.RICHESTSOFT_SSH_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
-        else
-          echo ":x: Unknown server selection: '${{ github.event.inputs.server_name }}'"
-          exit 1
-        fi
-    - name: Execute PM2 Restart via SSH
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ steps.set-connection.outputs.host }}
-        username: ${{ steps.set-connection.outputs.user }}
-        key: ${{ steps.set-connection.outputs.key }}
-        script: |
-          if [ "${{ github.event.inputs.process_name }}" = "Select_the_process" ]; then
-            echo ":x: Invalid process name selected. Aborting."
+      - name: Set environment variables based on server selection
+        run: |
+          if [ "${{ github.event.inputs.server_name }}" = "Indeed Training Droplet" ]; then
+            echo "HOST=${{ secrets.SERVER_IP }}" >> $GITHUB_ENV
+            echo "USER=${{ secrets.SERVER_USER }}" >> $GITHUB_ENV
+            echo "KEY='${{ secrets.SERVER_PRIVATE_KEY }}'" >> $GITHUB_ENV
+          elif [ "${{ github.event.inputs.server_name }}" = "Richestsoft Droplet" ]; then
+            echo "HOST=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_ENV
+            echo "USER=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_ENV
+            echo "KEY='${{ secrets.RICHESTSOFT_SSH_PRIVATE_KEY }}'" >> $GITHUB_ENV
+          else
+            echo "::error ::Unknown server selected. Aborting."
             exit 1
-          fi
-          echo ":mag: Current PM2 processes:"
-          pm2 list
-          echo ":arrows_counterclockwise: Restarting process: ${{ github.event.inputs.process_name }}"
-          pm2 restart "${{ github.event.inputs.process_name }}"
-          echo ":floppy_disk: Saving PM2 state..."
-          pm2 save
-          echo ":white_check_mark: Updated PM2 process list:"
-          pm2 list
+
+      - name: Restart PM2 App using SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.USER }}
+          key: ${{ env.KEY }}
+          script: |
+            if [ "${{ github.event.inputs.process_name }}" = "Select the process" ]; then
+              echo "::error ::Invalid process name selected. Aborting."
+              exit 1
+            fi
+            echo " Current PM2 processes:"
+            pm2 list
+            echo " Restarting process: ${{ github.event.inputs.process_name }}"
+            pm2 restart "${{ github.event.inputs.process_name }}"
+            echo " Saving PM2 state..."
+            pm2 save
+            echo " Updated PM2 process list:"
+            pm2 list
