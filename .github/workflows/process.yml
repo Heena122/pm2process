@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       server_name:
-        description: 'Select the server to connect too'
+        description: 'Select the server to connect to'
         required: true
         type: choice
         options:
@@ -19,47 +19,25 @@ on:
           - 'Select the process'
           - '2'
           - '3'
-          - 'JCA_Api_Gateway'
-          - 'JCA_central_service'
-          - 'JCA_driver_service'
-          - 'JCA_notify_service'
-          - 'JCA_ride_service'
-          - 'JCA_socket_service'
-          - 'JCA_user_service'
           - 'Tourist-guide'
-          - 'bcib-admin'
-          - 'bcib-backend'
-          - 'bcib-frontend'
-          - 'boost-backend-api'
-          - 'boost-frontend'
-          - 'codestoreapi'
-          - 'codestorefrontend'
-          - 'demotaxi'
-          - 'dhobisocket'
-          - 'droob-backend'
-          - 'invisa-socket'
-          - 'jca-socket-server'
-          - 'ukraine-backend'
-          - 'vite-app'
-          - 'wonkaa-socket'
-          - 'seotrendsfrontend'
-          - 'cron-script'
+     
 
 jobs:
   restart-process:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set environment variables based on server selection
+      - name: Set server-specific variables
+        id: set-vars
         run: |
           if [ "${{ github.event.inputs.server_name }}" = "Indeed Training Droplet" ]; then
-            echo "HOST=${{ secrets.SERVER_IP }}" >> $GITHUB_ENV
-            echo "USER=${{ secrets.SERVER_USER }}" >> $GITHUB_ENV
-            echo "KEY='${{ secrets.SERVER_PRIVATE_KEY }}'" >> $GITHUB_ENV
+            echo "host=${{ secrets.SERVER_IP }}" >> $GITHUB_OUTPUT
+            echo "user=${{ secrets.SERVER_USER }}" >> $GITHUB_OUTPUT
+            echo "key=${{ secrets.SERVER_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.inputs.server_name }}" = "Richestsoft Droplet" ]; then
-            echo "HOST=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_ENV
-            echo "USER=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_ENV
-            echo "KEY='${{ secrets.RICHESTSOFT_SSH_PRIVATE_KEY }}'" >> $GITHUB_ENV
+            echo "host=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_OUTPUT
+            echo "user=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_OUTPUT
+            echo "key=${{ secrets.RICHESTSOFT_SSH_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
           else
             echo "::error ::Unknown server selected. Aborting."
             exit 1
@@ -68,9 +46,9 @@ jobs:
       - name: Restart PM2 App using SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.HOST }}
-          username: ${{ env.USER }}
-          key: ${{ env.KEY }}
+          host: ${{ steps.set-vars.outputs.host }}
+          username: ${{ steps.set-vars.outputs.user }}
+          key: ${{ steps.set-vars.outputs.key }}
           script: |
             if [ "${{ github.event.inputs.process_name }}" = "Select the process" ]; then
               echo "::error ::Invalid process name selected. Aborting."
