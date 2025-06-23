@@ -20,24 +20,21 @@ on:
           - '2'
           - '3'
           - 'Tourist-guide'
-     
+          # ... Add the rest of your processes here
 
 jobs:
   restart-process:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set server-specific variables
-        id: set-vars
+      - name: Set host and username env variables
         run: |
           if [ "${{ github.event.inputs.server_name }}" = "Indeed Training Droplet" ]; then
-            echo "host=${{ secrets.SERVER_IP }}" >> $GITHUB_OUTPUT
-            echo "user=${{ secrets.SERVER_USER }}" >> $GITHUB_OUTPUT
-            echo "key=${{ secrets.SERVER_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.SERVER_IP }}" >> $GITHUB_ENV
+            echo "USER=${{ secrets.SERVER_USER }}" >> $GITHUB_ENV
           elif [ "${{ github.event.inputs.server_name }}" = "Richestsoft Droplet" ]; then
-            echo "host=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_OUTPUT
-            echo "user=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_OUTPUT
-            echo "key=${{ secrets.RICHESTSOFT_SSH_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_ENV
+            echo "USER=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_ENV
           else
             echo "::error ::Unknown server selected. Aborting."
             exit 1
@@ -46,9 +43,10 @@ jobs:
       - name: Restart PM2 App using SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ steps.set-vars.outputs.host }}
-          username: ${{ steps.set-vars.outputs.user }}
-          key: ${{ steps.set-vars.outputs.key }}
+          host: ${{ env.HOST }}
+          username: ${{ env.USER }}
+          #  Pass key directly using conditional expression (GitHub can't interpolate secrets dynamically in `env`)
+          key: ${{ github.event.inputs.server_name == 'Indeed Training Droplet' && secrets.SERVER_PRIVATE_KEY || secrets.RICHESTSOFT_SSH_PRIVATE_KEY }}
           script: |
             if [ "${{ github.event.inputs.process_name }}" = "Select the process" ]; then
               echo "::error ::Invalid process name selected. Aborting."
