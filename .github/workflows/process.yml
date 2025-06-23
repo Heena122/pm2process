@@ -51,9 +51,9 @@ jobs:
       id: set-connection
       run: |
         if [ "${{ github.event.inputs.server_name }}" = "Indeed Training Droplet" ]; then
-          echo "host=${{ secrets.SSH_HOST }}" >> $GITHUB_OUTPUT
-          echo "user=${{ secrets.SSH_USER }}" >> $GITHUB_OUTPUT
-          echo "key=${{ secrets.SSH_PRIVATE_KEY }}" >> $GITHUB_OUTPUT
+          echo "host=${{ secrets.SERVER_IP }}" >> $GITHUB_OUTPUT
+          echo "user=${{ secrets.SERVER_USER }}" >> $GITHUB_OUTPUT
+          echo "key=${{ secrets.SERVER_PASSWORD }}" >> $GITHUB_OUTPUT
         elif [ "${{ github.event.inputs.server_name }}" = "Richestsoft Droplet" ]; then
           echo "host=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_OUTPUT
           echo "user=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_OUTPUT
