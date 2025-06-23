@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       server_name:
-        description: 'Select the server to connect to'
+        description: 'Select the server to connect too'
         required: true
         type: choice
         options:
