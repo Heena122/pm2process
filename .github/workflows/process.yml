@@ -32,9 +32,11 @@ jobs:
           if [ "${{ github.event.inputs.server_name }}" = "Indeed Training Droplet" ]; then
             echo "HOST=${{ secrets.SERVER_IP }}" >> $GITHUB_ENV
             echo "USER=${{ secrets.SERVER_USER }}" >> $GITHUB_ENV
+            echo "KEY='${{ secrets.SERVER_PRIVATE_KEY }}'" >> $GITHUB_ENV
           elif [ "${{ github.event.inputs.server_name }}" = "Richestsoft Droplet" ]; then
             echo "HOST=${{ secrets.RICHESTSOFT_SSH_HOST }}" >> $GITHUB_ENV
             echo "USER=${{ secrets.RICHESTSOFT_SSH_USER }}" >> $GITHUB_ENV
+            echo "KEY='${{ secrets.RICHESTSOFT_SSH_PRIVATE_KEY }}'" >> $GITHUB_ENV
           else
             echo "::error ::Unknown server selected. Aborting."
             exit 1
