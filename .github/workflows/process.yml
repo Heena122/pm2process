@@ -21,6 +21,9 @@ on:
           - 'JCA_Api_Gateway'
           - 'JCA_central_service'
           - 'JCA_driver_service'
+          - 'wonkaa-socket'
+          - 'seotrendsfrontend'
+          - 'cron-script'
 
 jobs:
   restart-process:
