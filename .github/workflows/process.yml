@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       server_name:
-        description: 'Select the server to connect to '
+        description: 'Select the server to connect to'
         required: true
         type: choice
         options:
@@ -33,7 +33,8 @@ jobs:
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_PASSWORD }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          passphrase: ${{ secrets.SERVER_SSH_PASSPHRASE }}   # <-- Add this line
           script: |
             if [ "${{ github.event.inputs.process_name }}" = "Select the process" ]; then
               echo "::error ::Invalid process name selected. Aborting."
