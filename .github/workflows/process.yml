@@ -33,7 +33,7 @@ jobs:
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_PRIVATE_KEY }}
+          key: ${{ secrets.SERVER_PASSWORD }}
           script: |
             if [ "${{ github.event.inputs.process_name }}" = "Select the process" ]; then
               echo "::error ::Invalid process name selected. Aborting."
