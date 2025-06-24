@@ -20,6 +20,9 @@ on:
           - '2'
           - '3'
           - 'Tourist-guide'
+          - 'JCA_Api_Gateway'
+          - 'JCA_central_service'
+          - 'JCA_driver_service'
           # ... Add the rest of your processes here
 
 jobs:
